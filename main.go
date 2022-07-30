@@ -6,15 +6,16 @@ import (
         "log"
         "os"
 		"strconv"
+		"time"
 )
 
 // User object for handling user event data
 type Event struct {
-        Timestamp string `json:"timestamp"`
+        Timestamp time.Time `json:"timestamp"`
 		
 		Username string `json:"username"`
 		Operation string `json:"operation"`
-		Size string `json:"size"`
+		Size int `json:"size"`
 }
 
 
@@ -45,21 +46,37 @@ func main() {
         }
 
         var events []Event
+		uploads := 0
+
+		//uniqueUser := "jeff22"
         for i, col := range data {
-                event := Event{Timestamp: col[0],
+				size , _ := strconv.Atoi(col[3])
+				
+				t, _ := time.Parse(time.RFC3339, col[0])
+                event := Event{Timestamp: t,
                         Username:  col[1],
                         Operation: col[2],
-                        Size:      col[3],
+                        Size:      size,
                 }
-				size , _ := strconv.Atoi(col[3])
-				if  size >= 50 {
+				
+				if  size >= 50 && col[2] == "upload" {
+					uploads++
 					events = append(events, event)
 				}
                 
+				// if  t.Truncate(24*time.Hour).Equal(t2.Truncate(24*time.Hour)) {
+				// 	uploads++
+				// 	events = append(events, event)
+				// }
+
 
             	fmt.Println("\nEvent number and detail: ", i, "\n", event)
         }
 
-		fmt.Println(events)
+		fmt.Println("Uploads over 50kb = ", uploads)
+		//filter collection by unique users
+		fmt.Println("Number of unique users accessing the server: ")
+
+		fmt.Println("User jeff22 uploaded to server on April 15th, 2020 : ")  //prettify the output
 
 }
