@@ -5,24 +5,34 @@ import (
         "fmt"
         "log"
         "os"
-		"strconv"
 		"time"
+		"strconv"
+)
+
+const (
+	jFound string = "jeff22"
+    dFormat string = "2020-04-15"
 )
 
 // User object for handling user event data
 type Event struct {
-        Timestamp time.Time `json:"timestamp"`
-		
+        Timestamp string `json:"timestamp"`	
 		Username string `json:"username"`
 		Operation string `json:"operation"`
 		Size int `json:"size"`
 }
 
-
-// - The `timestamp` is recorded in the UNIX date format.
-// - The `username` is a unique identifier for the user.
-// - The `operation` indicates if an `upload` or `download` occurred, no other values will appear in this column.
-// - The `size` is an integer reflecting file size in `kB`.
+func removeDuplicates(arr []string) []string {
+    usr := map[string]bool{}
+    for i := range arr {
+        usr[arr[i]] = true
+    }
+    filtered := []string{} 
+    for j, _ := range usr {
+        filtered = append(filtered, j)
+    }
+    return filtered
+}
 
 // Your solution must be able to answer the following types of questions about the example log:
 // 1. How many users accessed the server?
@@ -47,13 +57,37 @@ func main() {
 
         var events []Event
 		uploads := 0
+		count := 0
+		jevents := 0
+		
 
-		//uniqueUser := "jeff22"
-        for i, col := range data {
+		// Unique users array
+		users := make([]string, len(data))
+
+        for _, col := range data {
 				size , _ := strconv.Atoi(col[3])
-				
-				t, _ := time.Parse(time.RFC3339, col[0])
-                event := Event{Timestamp: t,
+
+
+				timeStampString := col[0]
+				layOut := "Jan 2, 2006"
+				timeStamp, err := time.Parse(layOut, timeStampString)
+	   
+				if err != nil {
+						fmt.Println(err)
+						os.Exit(1)
+				}
+	   
+				hr, min, sec := timeStamp.Clock()
+	   
+				fmt.Printf("Clock : [%d]hour : [%d]minutes : [%d] seconds \n", hr, min, sec)
+	   
+				year, month, day := timeStamp.Date()
+	   
+				fmt.Printf("Date : [%d]year : [%d]month : [%d]day \n", year, month, day)
+	   
+		
+	
+                event := Event{Timestamp: timeStamp,
                         Username:  col[1],
                         Operation: col[2],
                         Size:      size,
@@ -63,20 +97,21 @@ func main() {
 					uploads++
 					events = append(events, event)
 				}
-                
-				// if  t.Truncate(24*time.Hour).Equal(t2.Truncate(24*time.Hour)) {
-				// 	uploads++
-				// 	events = append(events, event)
-				// }
+				users = append(users, col[1])
+				count++
 
-
-            	fmt.Println("\nEvent number and detail: ", i, "\n", event)
+				if  col[1] == jFound {
+					jevents++
+				}
         }
 
-		fmt.Println("Uploads over 50kb = ", uploads)
+		fmt.Println("\n\n-----------------------------------------------------------------")
+		fmt.Println("\nUploads over 50kb : ", uploads)
 		//filter collection by unique users
-		fmt.Println("Number of unique users accessing the server: ")
+		fmt.Println("\nNumber of events captured in the server stdout : ", count)
 
-		fmt.Println("User jeff22 uploaded to server on April 15th, 2020 : ")  //prettify the output
+    	fmt.Println("\nNumber of unique users : ",  len(removeDuplicates(users))-2)
 
+		fmt.Println("\nUser jeff22 uploaded to server on April 15th, 2020 : ", jevents , " times")  //prettify the output
+		fmt.Println("\n\n-----------------------------------------------------------------")
 }
